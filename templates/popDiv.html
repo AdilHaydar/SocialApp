@@ -1,0 +1,24 @@
+<div class="row">
+<div class="popDiv" id="popDiv_id" align="center">
+
+	<div class="popDiv-content" id="popDiv-content-id">
+		<form method="post" enctype="multipart/form-data" id="comment_form">
+			{% csrf_token %}
+			<input type="hidden" name="files" id="comment_files_id" value="">
+			<textarea  rows="2" name="statement" id="id_comment_statement" placeholder="What's up!"></textarea>
+
+			<input type="hidden" name="post_id" id="post_id_value">
+			<label class="input_value" id="fileLabel"></label>
+            <button class="btn-sm btn-outline-primary float-right">Submit</button>
+            <div></div>
+		</form>
+
+	</div>
+
+</div>
+</div>
+
+<script>
+
+
+</script>

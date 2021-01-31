@@ -1,0 +1,30 @@
+{% extends 'main_page.html' %}
+{% load widget_tweaks %}
+{% block posts %}
+
+
+<div class="row" style="width:25%;color:white;margin-left:25%;margin-bottom: 20px;">
+    <form method="POST" enctype="multipart/form-data">
+        {% csrf_token %}
+        <img src="{{request.user.get_image_or_default}}" class="rounded-circle z-depth-2" data-holder-rendered="true" id="show-avatar"> <br>
+        
+        <label class="login-input-labels">Avatar</label>{% render_field form.avatar  %} <br>
+        <labe class="login-input-labels"l>Username</label>{% render_field form.username %} <br>
+        <label class="login-input-labels">Email</label>{% render_field form.email %} <br>
+        <label class="login-input-labels">Info</label>{% render_field form.info %} <br>
+        <label class="login-input-labels">Birthday</label><!--{% render_field form.birthday %}--><input type="date" name="birthday" id="id_birthday" class="form-control" value='{{request.user.birthday|date:"Y-m-d"}}'> <br>
+        <label class="login-input-labels">Web Page</label>{% render_field form.web_page %} <br>
+        <label class="login-input-labels">Password</label>{% render_field form.password %} <br>
+        <label class="login-input-labels">Confirm</label>{% render_field form.confirm %} <br>
+        <input type="submit" class="btn btn-outline-primary" value="Register" id="id_register">
+    </form>
+</div>
+
+<style>
+#id_avatar
+{
+display: block !important;
+}
+</style> 
+
+{% endblock %}

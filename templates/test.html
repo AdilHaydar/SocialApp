@@ -1,0 +1,17 @@
+<html>
+
+	<input type="file" id="file" onchange="setValue(this)">
+	<div id="text"></div>
+
+
+	<script>
+
+		function setValue(param)
+		{
+			const showText = document.getElementById('text')
+			showText.innerHTML = param.value.split('\\').slice(-1).pop()
+		}
+	</script>
+
+
+</html>

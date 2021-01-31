@@ -1,0 +1,98 @@
+{% extends 'main_page.html' %}
+{% load check_file_type %}
+{% load user_methods %}
+{% load humanize %}
+
+{% block posts %}
+
+
+<div class="row">
+<div class="col-lg-1 col-md-0 col-sm-0 col-xs-0"></div>
+<div class="col-lg-2 col-md-2 col-sm-1 col-xs-0"></div>
+  <div class="col-lg-6 col-md-8 col-sm-10 col-xs-12"> 
+  {% include 'popDiv.html' %}
+  <div class="profile-car">
+    <div class="content">
+    <div class="row">
+      <div class="col-sm-6"><img src="{{user.get_image_or_default}}" class="rounded-circle z-depth-2" data-holder-rendered="true" style="position:relative;height: 60px; width:60px; float:left;">
+      
+        <a href="#{{post.id}}_id" id="{{post.id}}_id" style="color:white;text-decoration: none;font-size: bold;margin-left:5px;">{{user.username}}</a>
+      </div>
+       <div class="col-6" style="float:right;">
+        {% if user.web_page %}
+          <i class="fas fa-globe"></i> <a style="color:darkblue;" href="{{user.web_page}}">{{user.web_page}}</a><br><br>
+        {% endif %}
+      </div>
+    </div>
+    <hr>
+    <div class="row">
+        <div class="col-6">
+          
+          {% if user.info %}
+            {{user.info}}
+          {% endif %}
+        </div>
+        <div class="col-6" style="float:right;">
+        {% if user.birthday %}
+        <i class="fas fa-birthday-cake" style="margin-right:5px;"></i>Birthday {{user.birthday|date}}
+        <br>
+        {% endif %}
+        <i class="far fa-calendar-alt" style="margin-right:5px;"></i>Joined on {{user.timestamp|date}}
+        {% if request.user|follow_or_unfollow:user.id == None %}
+          <a style="float:right;margin:5px;border-radius:20px;" class="btn btn-outline-info" href="{% url 'user:userPanel' request.user.username %}">Edit Profile</a>
+        {% elif request.user|follow_or_unfollow:user.id %}
+          <button style="float:right;margin:5px;border-radius:20px;" class="btn btn-outline-danger">Unfollow</button>
+        {% else %}
+          <button style="float:right;margin:5px;border-radius:20px;top:0;" class="btn btn-outline-info">Follow</button>
+        {% endif %}
+        </div>
+        
+      </div>
+      
+       
+    <div class="row" align="center">
+      <div class="col-4 user-sublinks"><a class="user-sublinks-element" href="{% url 'view_profile' user.username %}">Posts</a></div>
+      <div class="col-4 user-sublinks"><a class="user-sublinks-element" href="{% url 'view_replies' user.username %}">Replies</a></div>
+      <div class="col-4 user-sublinks"><a class="user-sublinks-element" href="{% url 'view_likes' user.username %}">Likes</a></div>
+    </div>    
+    </div>
+    </div>
+
+<div class="infinite-container">
+    {% for comment in comments %}
+<div class="content infinite-item">
+  <div class="row">
+    <div class="col-sm-12"><img src="{{user.get_image_or_default}}" class="rounded-circle z-depth-2" data-holder-rendered="true" style="position:relative;height: 50px; float:left;">
+    
+      <a href="#{{user.username}}_id" id="{{user.id}}_id" style="color:white;text-decoration: none;font-size: bold;margin-left:5px;">{{user.username}}</a> <small style="color:gray;"> | {{comment.created_date|naturaltime}}</small>
+    </div>
+  </div>
+  <hr>
+  <div class="row">
+    <div class="col-12 post-reply-helper">{{comment.post.user.username}} | {{comment.post.statement|truncatewords:10}} <a href="{% url 'post:view_post' comment.post.id %}">more...</a></div>
+  </div>
+  <div class="vertical-line"></div>
+  <div class="row">
+    <div class="col-12"> <p id="{{comment.id}}">{{comment.statement}}</p><br>
+  </div>
+  </div>
+  </div>
+  {% endfor %}
+</div>
+
+{% if comments.has_next %}
+      <a class="infinite-more-link" href="?page={{ comments.next_page_number }}"></a>
+      <div class="d-flex justify-content-center" style="display:none;">
+            <div class="spinner-border" role="status">
+                <span class="sr-only">Loading...</span>
+            </div>
+        </div>
+    {% endif %}
+
+</div>
+  
+<div class="col-lg-2 col-md-2 col-sm-1 col-xs-0"></div>
+<div class="col-lg-1 col-md-0 col-sm-0 col-xs-0"></div>
+  </div>
+{% endblock %}
+

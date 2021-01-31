@@ -1,0 +1,231 @@
+body {
+    margin: 0;
+    font-family: Arial;
+    font-size: 17px;
+    /*background: rgba(10,10,10,0.8);*/
+    background: #0d1117 var(--color-bg-canvas);
+}
+.post_redirect
+{
+    border-radius: 10px;
+}
+.post_redirect:hover
+{
+    /*background: rgba(150, 150, 150, 0.6);*/
+    background: #273346;
+}
+* {
+    box-sizing: border-box;
+}
+#popDiv_id
+{
+    display:none;
+    z-index: 2;
+    position: fixed;
+    filter: blur(0px);
+    top: 25%;
+    left:25%;
+    right: 25%;
+    /*box-shadow: 0px 9px 20px 14px rgba(0,0,0,0.5); /*gölgeden ötürü radius taraflarına bi sıkıntı çıkıyor */
+
+}
+#my-video
+{
+    position:relative;
+    width: 100%;
+    border-radius: 15px;
+    border: 2px outset lightgray;    
+}
+.popDiv-content
+{
+    margin-top: 5px;
+    background: rgba(150, 150, 150, 1);
+    color: #f1f1f1;
+    width: 100%;
+    padding: 20px;
+    border-radius: 10px;
+}
+::placeholder{
+    color:white;
+    opacity: 0.8;
+}
+#thumbnail_id{
+    padding: 5px;
+}
+.show-thumbnail{
+    border: 1px outset black;
+    border-radius: 5px;
+}
+.status{
+    float:right;
+    padding: 2px;
+}
+.popBtn:hover, .popBtnLike:hover{
+    z-index: 1;
+    font-weight: bold;
+}
+#show_id{
+    width: 48px;
+    height: 48px;
+    margin-right: 5px;
+    margin-bottom: 5px;
+    transition: width 0.3s, height 0.3s;
+    
+}
+#show_id:hover{
+    width: 320px;
+    height: 320px;
+    transition: width 0.3s, height 0.3s;
+    z-index: 2;
+    position: absolute;
+}
+
+#id_statement, #id_comment_statement{
+    width:100%;
+    resize: none;
+    border-radius: 5px;
+    border:1px solid rgba(150,150,150,0.5);
+    background: rgba(10,10,10,0.5);
+    color:white;
+    padding: 5px;
+}
+
+input[type="file"]
+{
+display: none;
+}
+.likePostSubmit{
+    display: none;
+}
+.btn-sm{
+    background: rgba(0,0,0,0);
+    color:white !important;
+    border:1px solid rgba(0,100,255,0.8);
+}
+.custom-file-upload
+{
+
+position: block-inline;
+border: 1px solid rgba(150,150,150,0.5);
+display: inline-block;
+padding: 5px;
+cursor: pointer;
+}
+.file_upload
+{
+    font-size:20px;
+    padding:5px;
+    position: block-inline;
+    border: 1px solid rgba(150,150,150,0.5);
+}
+.file_upload:hover{
+    background: rgba(0,120,255,0.8);
+    transition:0.3s;
+    border: 1px solid rgba(0,120,255,0.8);
+}
+.content {
+    margin-top: 5px;
+    /*background: rgba(150, 150, 150, 0.5);*/
+    background: #171e29;
+    color: #f1f1f1;
+    width: 100%;
+    padding: 20px;
+    border-radius: 10px;
+    border: 1px inset rgba(150,150,150,0.5);
+}
+
+#myBtn {
+    width: 200px;
+    font-size: 18px;
+    padding: 10px;
+    border: none;
+    background: #000;
+    color: #fff;
+    cursor: pointer;
+}
+
+#myBtn:hover {
+    background: #ddd;
+    color: black;
+}
+
+#invisible_comment
+{
+    display: none;
+}
+.user-sublinks
+{
+    color:lightgray;
+    padding: 10px;
+    border-radius: 10px;
+    margin-top: 5px;
+    transition: all 0.2s;
+    
+}
+.user-sublinks:hover
+{
+    background-color: rgba(0, 80, 175,0.8);
+    cursor: pointer;
+    transition: all 0.2s;
+}
+.user-sublinks-element:hover{
+    text-decoration: none;
+    color:white;
+}
+.post-reply-helper{
+    font-size: 12px;
+    border: 1px inset rgb(40, 40, 46);
+    padding: 5px;
+    border-radius: 10px;
+}
+.vertical-line
+{
+    height: 35px;
+    color:lightgray;
+    border: 2px solid rgba(77, 77, 87, 0.877);
+    width: 2px;
+    margin-top: 5px;
+}
+#show-avatar
+{
+    height:250px;
+    width: 250px;
+    padding:10px;
+}
+#id_register
+{
+    margin-top:10px;
+
+}
+.login-inputs
+{
+    border-radius: 10px;
+    border: 1 inset rgba(40,35,55,0.8);
+    padding: 5px;
+    width: 300px;
+    margin:15px;
+    transition: 0.2s;
+}
+.login-inputs:hover
+{
+    -webkit-box-shadow: 0px 0px 30px 8px rgba(3,130,227,1);
+    -moz-box-shadow: 0px 0px 30px 8px rgba(3,130,227,1);
+    box-shadow: 0px 0px 30px 8px rgba(3,130,227,1);
+    transition: 0.2s;
+}
+.login-input-labels
+{
+    width: 100px;
+}
+.input-form
+{
+    margin-top: 15px;
+}
+.search_inputs:not(:last-child)
+{
+    border-right: 1px solid white;
+}
+.search_inputs:hover
+{
+    background-color: rgba(3,130,227,1);
+}

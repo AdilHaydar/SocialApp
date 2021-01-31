@@ -1,0 +1,23 @@
+{% extends 'main_page.html' %}
+{% block posts %}
+
+
+<div class="row" style="width:25%;color:white;margin-left:25%;margin-bottom: 20px;">
+    <form method="POST" enctype="multipart/form-data">
+        {% csrf_token %}
+        <img src="/media/def_image/default-user-image.png" class="rounded-circle z-depth-2" data-holder-rendered="true" id="show-avatar"> <br>
+        
+        {{ form }}
+        <input type="submit" class="btn btn-outline-primary" value="Register" id="id_register">
+    </form>
+</div>
+
+<style>
+#id_avatar
+{
+display: block !important;
+}
+</style> 
+
+{% endblock %}
+

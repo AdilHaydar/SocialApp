@@ -1,0 +1,93 @@
+{% extends 'main_page.html' %}
+{% load check_file_type %}
+{% load static %}
+{% load humanize %}
+
+{% block posts %}
+
+{% include 'input.html' %}
+
+<div class="row">
+<div class="col-lg-1 col-md-0 col-sm-0 col-xs-0"></div>
+<div class="col-lg-2 col-md-2 col-sm-1 col-xs-0"></div>
+  <div class="col-lg-6 col-md-8 col-sm-10 col-xs-12"> 
+  <div class="infinite-container">
+    {% for post in posts %}
+      
+      <div class="content infinite-item">
+        <div class="row">
+          <div class="col-sm-12"><img src="{{post.user.get_image_or_default}}" class="rounded-circle z-depth-2" data-holder-rendered="true" style="position:relative;height: 60px; width:60px; float:left;">
+          
+            <a href="{% url 'view_profile' post.user.username %}" id="{{post.id}}_id" style="color:white;text-decoration: none;font-size: bold;margin-left:5px;">{{post.user}}</a> <small style="color:gray;"> | {{post.created_date|naturaltime}}</small>
+          </div>
+        </div>
+        <hr>
+        <div class="row">
+        <div class="col-12"> <p class="post_redirect" id="{{post.id}}" onmouseup="redirect_to_post(this)">{{post.statement}}</p> <br>
+          {% if post.file.get %}
+            {% if not post.file.get.file.path|image_or_video %}
+      <div align="center">
+        <video
+          id="my-video"
+          class="video-js"
+          controls
+          preload="auto"
+          data-setup="{}">
+          <source src="{{post.file.get.file.url}}" type="video/mp4" />
+          <p class="vjs-no-js">
+            To view this video please enable JavaScript, and consider upgrading to a
+            web browser that
+            <a href="https://videojs.com/html5-video-support/" target="_blank">supports HTML5 video</a>
+          </p>
+        </video>
+      </div>
+            {% else %}
+            <img src="{{post.file.get.file.url}}" id="my-video">
+            {% endif %}
+          {% endif %}
+        <div class="status" id="status_id">
+
+          <i class="far fa-comment popBtn" id="{{post.id}}"></i><label style="margin-left:3px;">{{post.comment.count}}</label>
+          {% if post.id in request.user.get_likes_list %}
+          <label class="custom_file_upload">
+            <i id="red-heart-{{post.id}}" class="far fa-heart popBtnLike" style="color:red;font-weight:bold;"></i>
+            <input class="likePostSubmit" id="unlike-{{post.id}}" onclick="handleLike(this)" value="{{post.id}}">
+            <label id="like-count-{{post.id}}" style="margin-left:3px;" >{{post.likes.count}}</label>
+          </label>
+          {% else %}
+          <label class="custom_file_upload">
+            <i id="white-heart-{{post.id}}" class="far fa-heart popBtnLike" style="color:white;"></i>
+            <input class="likePostSubmit" id="like-{{post.id}}" onclick="handleLike(this)" value="{{post.id}}">
+            <label id="like-count-{{post.id}}" style="margin-left:3px;">{{post.likes.count}}</label>
+          </label>
+          {% endif %}
+
+        </div>
+        </div>
+        </div>
+      </div>
+
+    {% endfor %}
+    </div>
+    {% if posts.has_next %}
+      <a class="infinite-more-link" href="?page={{ posts.next_page_number }}"></a>
+      <div class="d-flex justify-content-center" style="display:none;">
+            <div class="spinner-border" role="status">
+                <span class="sr-only">Loading...</span>
+            </div>
+        </div>
+    {% endif %}
+        
+{% endblock %}
+  </div>
+  
+<div class="col-lg-2 col-md-2 col-sm-1 col-xs-0"></div>
+<div class="col-lg-1 col-md-0 col-sm-0 col-xs-0"></div>
+  </div>
+
+{% block script %}
+    <script src="{% static 'js/jquery.waypoints.min.js' %}"></script>
+    <script src="{% static 'js/infinite.min.js' %}"></script>
+    <script src="{% static 'js/controls.js' %}"></script>
+    <script src="{% static 'js/post_ajax.js' %}"></script>
+  {% endblock %}

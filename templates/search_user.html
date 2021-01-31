@@ -1,0 +1,57 @@
+{% extends 'main_page.html' %}
+{% load check_file_type %}
+{% load static %}
+{% load user_methods %}
+{% load humanize %}
+
+{% block posts %}
+
+
+<div class="row">
+<div class="col-lg-1 col-md-0 col-sm-0 col-xs-0"></div>
+<div class="col-lg-2 col-md-2 col-sm-1 col-xs-0"></div>
+  <div class="col-lg-6 col-md-8 col-sm-10 col-xs-12"> 
+  <div class="content">
+      <div class="row" align="center">
+        <div class="col-3 search_inputs" href="/search/?q={{searchValue}}&searchq=postq" onclick="handleSearch(this)" id="id_post_href">
+          Post
+        </div>
+        <div class="col-3 search_inputs " href="/search/?q={{searchValue}}&searchq=userq" onclick="handleSearch(this)" id="id_user_href">
+          User
+        </div>
+        <div class="col-3 search_inputs" href="/search/?q={{searchValue}}&searchq=tagq" onclick="handleSearch(this)" id="id_tag_href">
+          Tag
+        </div>
+        <div class="col-3 search_inputs" href="/search/?q={{searchValue}}&searchq=locationq" onclick="handleSearch(this)" id="id_location_href">
+          Location
+        </div>
+      </div>
+    </div>
+  <div class="infinite-container">
+    {% for user in users %}
+    <div class="content" href="/{{user.username}}" onclick=handleSearch(this)>
+      <div class="row">
+      <div class="col-2"><img src="{{user|get_image_or_default:user.avatar}}" class="rounded-circle z-depth-2" data-holder-rendered="true" style="position:relative;height: 60px; width:60px; float:left;"></div>
+      <div class="col-10s">
+        {{user.username}} <br>
+        <small>{{user.info|truncatewords:10}}</small>
+      </div>
+      </div>
+      </div>
+    {% endfor %}
+    <!--{% if posts.has_next %}
+      <a class="infinite-more-link" href="?page={{ posts.next_page_number }}"></a>
+      <div class="d-flex justify-content-center" style="display:none;">
+            <div class="spinner-border" role="status">
+                <span class="sr-only">Loading...</span>
+            </div>
+        </div>
+    {% endif %}-->
+
+
+{% endblock %}
+  </div>
+  
+<div class="col-lg-2 col-md-2 col-sm-1 col-xs-0"></div>
+<div class="col-lg-1 col-md-0 col-sm-0 col-xs-0"></div>
+  </div>

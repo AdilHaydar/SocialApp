@@ -1,0 +1,18 @@
+{% extends 'main_page.html' %}
+{% block posts %}
+
+
+<div class="row" style="color:white;margin-left:25%;">
+    <form method="POST" class="input-form">
+        {% csrf_token %}
+        {% for field in form %}
+            <label class="login-input-labels">{{field.label}}</label> {{field}} <br>
+        {% endfor %}
+        <input type="submit" class="btn btn-outline-primary" value="Login" id="id_register">
+        <p style="margin-top:5px;">
+        If you don't have an account <a href="{% url 'user:register' %}">REGISTER</a></p>
+    </form>
+    
+</div>
+
+{% endblock %}
