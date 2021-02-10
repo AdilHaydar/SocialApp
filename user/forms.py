@@ -1,6 +1,15 @@
 from django import forms
 from .models import User, UserUpdateModel
 from django.contrib.auth.forms import ReadOnlyPasswordHashField, UserChangeForm
+from phonenumber_field.formfields import PhoneNumberField
+
+gender = (
+    ('','Specify Gender'),
+    ('Female','Female'),
+    ('Male','Male')
+)
+
+
 
 
 class UserAdminCreationForm(forms.ModelForm):
@@ -9,7 +18,7 @@ class UserAdminCreationForm(forms.ModelForm):
 
 	class Meta:
 		model = User
-		fields = ('username', 'email', 'birthday')
+		fields = ('username', 'email')
 
 	def clean_password2(self):
 		password1 = self.cleaned_data.get('password1')
@@ -31,7 +40,7 @@ class UserAdminChangeForm(forms.ModelForm):
 
 	class Meta:
 		model = User
-		fields = {'email','avatar','birthday','admin','active','is_banned'}
+		fields = {'email','picture','admin','active'}
 
 	def clean_password(self):
 		return self.initial['password']
@@ -39,7 +48,6 @@ class UserAdminChangeForm(forms.ModelForm):
 class UserCreationForm(forms.ModelForm):
 	password1 = forms.CharField(label = 'Password', widget=forms.PasswordInput)
 	password2 = forms.CharField(label = 'Password Confirmation', widget= forms.PasswordInput)
-	birthday = forms.DateField(label = 'Birthday', widget=forms.DateInput(attrs={'type':'date'}))
 
 	class Meta:
 		model = User
@@ -66,111 +74,111 @@ class LoginForm(forms.Form):
 	class Meta:
 		fields = ['username','password']
 
-	def __init__(self,*args,**kwargs):
-		super(LoginForm, self).__init__(*args,**kwargs)
-		for field in self.fields:
-			self.fields[field].widget.attrs = {'class':'login-inputs'}
-
 
 class RegisterForm(forms.Form):
-	class Meta:
-		model = User
-		fields = ['username', 'email','info','web_page','avatar', 'birthday', 'password', 'confirm']
+    class Meta:
+        model = User
+        fields = ['username', 'email', 'picture','gender', 'name','surname', 'phone', 'password', 'confirm']
 
-	def __init__(self,*args,**kwargs):
-		super(RegisterForm, self).__init__(*args,**kwargs)
-		for field in self.fields:
-			if field == 'avatar':
-				self.fields[field].widget.attrs = {'onchange':'readAvatar(this)','accept':".jpg, .jpeg, .png, .mp4, .wmv, .avi"}
-				continue
-			self.fields[field].widget.attrs = {'class':'form-control'}
+    def __init__(self,*args,**kwargs):
+        super(RegisterForm, self).__init__(*args,**kwargs)
+        for field in self.fields:
+            self.fields[field].widget.attrs = {'class':'form-control'}
 
-	avatar = forms.ImageField(label = 'Avatar', required=False)
-	username = forms.CharField(label = 'Username')
-	email = forms.EmailField()
-	info = forms.CharField(label = 'User Info', required = False, widget=forms.Textarea(attrs={'id':'id_statement','rows':'2'}))
-	web_page = forms.URLField(label = 'Web Page', required=False)
-	birthday = forms.DateField(label = 'Birthday', widget=forms.DateInput(attrs={'type':'date'}), required=False)
-	password = forms.CharField(widget = forms.PasswordInput)
-	confirm = forms.CharField(label = 'Confirm Password', widget = forms.PasswordInput)
+    picture = forms.ImageField(label = 'Picture', required=False)
+    username = forms.CharField(label = 'Username')
+    email = forms.EmailField(label="Email")
+    gender = forms.ChoiceField(choices=gender,label="Gender")
+    name = forms.CharField(label='Name', required=True)
+    surname = forms.CharField(label='Surname', required=True)
+    phone = forms.CharField(required=False, label="Phone")
+    password = forms.CharField(label="Password",widget = forms.PasswordInput)
+    confirm = forms.CharField(label = 'Confirm Password', widget = forms.PasswordInput)
 	
 
-	def clean(self):
-		username = self.cleaned_data.get('username')
-		password = self.cleaned_data.get('password')
-		confirm = self.cleaned_data.get('confirm')
-		email = self.cleaned_data.get('email')
-		avatar = self.cleaned_data.get('avatar')
-		birthday = self.cleaned_data.get('birthday')
-		info = self.cleaned_data.get('info')
-		web_page = self.cleaned_data.get('web_page')
+    def clean(self):
+        username = self.cleaned_data.get('username')
+        password = self.cleaned_data.get('password')
+        confirm = self.cleaned_data.get('confirm')
+        email = self.cleaned_data.get('email')
+        phone = self.cleaned_data.get('phone')
+        name = self.cleaned_data.get('name')
+        surname = self.cleaned_data.get('surname')
+        picture = self.cleaned_data.get('picture')
+        gender = self.cleaned_data.get('gender')
 
-		if password and confirm and password != confirm:
-			raise forms.ValidationError("Passwords doesn't match")
-		if email == False:
-			raise forms.ValidationError("A valid Email Address")
-		if len(username) < 3:
-			raise forms.ValidationError("Username (%s) is can't be less than 6 characters." %username)
+        if password and confirm and password != confirm:
+            raise forms.ValidationError("Passwords doesn't match")
+        if email == False:
+            raise forms.ValidationError("A valid Email Address")
+        if len(username) < 3:
+            raise forms.ValidationError("Username (%s) is can't be less than 6 characters." %username)
 
-		values = {
-		'username' : username,
-		'password' : password,
-		'email' : email,
-		'avatar': avatar,
-		'birthday' : birthday,
-		'info' : info,
-		'web_page' : web_page,
-		}
+        values = {
+        'username' : username,
+        'password' : password,
+        'email' : email,
+        'picture':picture,
+        'name':name,
+        'surname':surname,
+        'phone':phone,
+        'gender':gender,
+        }
 
-		return values
+        return values
 
 class UserUpdateForm(forms.ModelForm):
-    
-	class Meta:
-		model = User
-		fields = ['username', 'email','info','web_page','avatar', 'birthday', 'password', 'confirm']
+    class Meta:
+        model = User
+        fields = ['username', 'email','name','gender','surname','phone','picture', 'password', 'confirm', 'admin']
 
-	def __init__(self,*args,**kwargs):
-		super(UserUpdateForm, self).__init__(*args,**kwargs)
-		for field in self.fields:
-			if field == 'avatar':
-				self.fields[field].widget.attrs = {'onchange':'readAvatar(this)','accept':".jpg, .jpeg, .png, .mp4, .wmv, .avi"}
-				continue
-			self.fields[field].widget.attrs = {'class':'form-control'}
+    def __init__(self,*args,**kwargs):
+        super(UserUpdateForm, self).__init__(*args,**kwargs)
+        for field in self.fields:
+            if field == 'picture':
+                continue
+            self.fields[field].widget.attrs = {'class':'form-style', 'placeholder' : self.fields[field].label }
 
-	avatar = forms.ImageField(label = 'Avatar', required=False)
-	username = forms.CharField(label = 'Username')
-	email = forms.EmailField()
-	info = forms.CharField(label = 'User Info', required = False, widget=forms.Textarea(attrs={'rows':'5'}))
-	web_page = forms.URLField(label = 'Web Page', required=False)
-	birthday = forms.DateField(label = 'Birthday', widget=forms.DateInput(attrs={'type':'date'}), required=False)
-	password = forms.CharField(widget = forms.PasswordInput)
-	confirm = forms.CharField(label = 'Confirm Password', widget = forms.PasswordInput)
+    picture = forms.ImageField(label = 'Picture', required=False)
+    username = forms.CharField(label = 'Username')
+    email = forms.EmailField(label = 'Email')
+    name = forms.CharField(label='Name', required=True)
+    surname = forms.CharField(label='Surname', required=True)
+    phone = PhoneNumberField(required=False)
+    password = forms.CharField(label = 'Password', widget = forms.PasswordInput, required=False)
+    confirm = forms.CharField(label = 'Confirm Password', widget = forms.PasswordInput, required=False)
+    gender = forms.ChoiceField(choices=gender,label = 'Gender', required=False)
+    admin = forms.BooleanField(label = 'Super User', required=False)
 
-	def clean(self):
-		username = self.cleaned_data.get('username')
-		password = self.cleaned_data.get('password')
-		confirm = self.cleaned_data.get('confirm')
-		email = self.cleaned_data.get('email')
-		avatar = self.cleaned_data.get('avatar')
-		birthday = self.cleaned_data.get('birthday')
-		info = self.cleaned_data.get('info')
-		web_page = self.cleaned_data.get('web_page')
-		
+    def clean(self):
+        username = self.cleaned_data.get('username')
+        password = self.cleaned_data.get('password')
+        confirm = self.cleaned_data.get('confirm')
+        email = self.cleaned_data.get('email')
+        phone = self.cleaned_data.get('phone')
+        name = self.cleaned_data.get('name')
+        surname = self.cleaned_data.get('surname')
+        picture = self.cleaned_data.get('picture')
+        gender = self.cleaned_data.get('gender')
+        admin = self.cleaned_data.get('admin')
 
-		if password and confirm and password != confirm:
-			raise forms.ValidationError("Passwords doesn't match")
-		if email == False:
-			raise forms.ValidationError("A valid Email Address")
+        if password and confirm and password != confirm:
+            raise forms.ValidationError("Passwords doesn't match")
+        if email == False:
+            raise forms.ValidationError("A valid Email Address")
+        if len(username) < 3:
+            raise forms.ValidationError("Username (%s) is can't be less than 6 characters." %username)
 
-		values = {
-		'username' : username,
-		'password' : password,
-		'email' : email,
-		'avatar': avatar,
-		'birthday' : birthday,
-		'info' : info,
-		'web_page' : web_page,
-		}
+        values = {
+        'username' : username,
+        'password' : password,
+        'email' : email,
+        'picture':picture,
+        'name':name,
+        'surname':surname,
+        'phone':phone,
+        'gender':gender,
+        'admin':admin
+        }
 
-		return values
+        return values
