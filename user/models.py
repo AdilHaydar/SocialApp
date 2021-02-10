@@ -4,10 +4,13 @@ from django.core.validators import RegexValidator
 from django.core.exceptions import ValidationError
 from django.utils.translation import gettext_lazy as _
 from django.contrib.auth.models import UserManager
+from phonenumber_field.modelfields import PhoneNumberField
+from django.contrib.auth.models import Group
 # Create your models here.
 
+
 def upload_to(instance,filename):
-    return '%s/%s/%s'%('users_avatar',instance.email,filename)
+    return '%s/%s/%s'%('users_picture',instance.username,filename)
 
 def validate_email(value):
     if not '@' in value:
@@ -19,7 +22,7 @@ def validate_username(value):
 
 
 class UserManager(BaseUserManager):
-    def create_user(self, email, password=None, is_admin=False, is_staff=False, is_active=True):
+    def create_user(self, email, name, surname, password=None, is_admin=False, is_staff=False, is_active=True):
         if not email:
             raise ValueError("User must have an email")
         if not password:
@@ -28,7 +31,9 @@ class UserManager(BaseUserManager):
         user = self.model(
             email=self.normalize_email(email)
         )
-        
+
+        group = Group.objects.get(name='customer')
+        user.group = group
         user.username = username
         user.set_password(password) 
         user.admin = is_admin
@@ -39,6 +44,8 @@ class UserManager(BaseUserManager):
         
     def create_superuser(self, username, password=None, **extra_fields):
         email = input('Email: ')
+        name = input('Name: ')
+        surname = input('Surname: ')
 
         if not email:
             raise ValueError("User must have an email")
@@ -52,6 +59,8 @@ class UserManager(BaseUserManager):
         )
         
         user.username = username
+        user.name = name
+        user.surname = surname
         user.set_password(password)
         user.admin = True
         user.staff = True
@@ -60,13 +69,14 @@ class UserManager(BaseUserManager):
         return user
 
 class User(AbstractBaseUser):
-    username = models.CharField(max_length = 15, validators=[validate_username], unique=True)
-    birthday = models.DateField(null=True, blank=True)
+    group = models.ForeignKey(Group, verbose_name='Group', on_delete=models.SET_NULL, null=True, related_name='user')
+    username = models.CharField(verbose_name="Username",max_length = 15, validators=[validate_username], unique=True)
+    name = models.CharField(verbose_name="name",max_length=20, blank=False, null=False)
+    surname = models.CharField(verbose_name="surname",max_length=20, blank=False, null=False)
+    picture = models.ImageField(verbose_name="Picture",null=True, blank=True,upload_to=upload_to)
     email = models.EmailField(unique=True, verbose_name = 'Email Address', validators=[validate_email], max_length=255)
-    info = models.TextField(null=True, blank = True)
-    web_page = models.URLField(null = True, blank = True)
-    is_banned = models.BooleanField(default=False, verbose_name = 'Banned')
-    avatar = models.ImageField(upload_to=upload_to, null=True, blank=True)
+    phone = PhoneNumberField(verbose_name="Phone",null=True, blank=True, unique=True)
+    gender = models.CharField(verbose_name="Gender",max_length=10, null=True, blank=True, default='')
     active = models.BooleanField(default = True)
     staff = models.BooleanField(default = False)
     admin = models.BooleanField(default = False)
@@ -80,40 +90,34 @@ class User(AbstractBaseUser):
     class Meta:
         verbose_name = "User"
 
-            
-    @property
-    def get_image_or_default(self):
-        if self.avatar and hasattr(self.avatar, 'url'):
-            return self.avatar.url
-        return '/media/def_image/default-user-image.png'
 
     def __str__(self):
         return self.username
 
-    def pathName(self):
-        return '/'+self.username+'/'
 
-    def get_short_name(self):
-        pass
+    def get_full_name(self):
+        return self.name+' '+self.surname
 
     @property
     def is_staff(self):
         return self.staff
     @property
-    def is_admin(self):
+    def is_superuser(self):
         return self.admin
     @property
     def is_active(self):
         return self.active
 
     def has_perm(self, perm, obj=None):
-       return self.admin
+        if self.is_superuser and self.is_active:
+            return True
+        if self.group:
+            if perm in self.group.permissions.values_list('codename',flat=True):
+                return True
+            return False
 
     def has_module_perms(self, app_label):
        return self.admin
-
-    def get_likes_list(self):
-        return self.likes.values_list('post',flat = True)
 
 
 class UserUpdateModel(models.Model):
@@ -122,26 +126,5 @@ class UserUpdateModel(models.Model):
         unique=True,
         verbose_name = "Email",
     )
-    
-    birthday = models.DateField(null=True, blank=True)
-    avatar = models.ImageField(upload_to=upload_to, null=True, blank=True)
 
 
-
-class UserFollowing(models.Model):
-    user_id = models.ForeignKey(User, related_name='following', on_delete=models.CASCADE)
-    following_user_id = models.ForeignKey(User, related_name='followers',on_delete=models.CASCADE)
-    created = models.DateTimeField(auto_now_add=True, db_index = True)
-
-    class Meta:
-        constraints = [
-            models.UniqueConstraint(fields=['user_id','following_user_id'],  name="unique_followers")
-        ]
-
-        ordering = ["-created"]
-
-    def __str__(self):
-        return (self.user_id.username+" follow "+self.following_user_id.username)
-
-    #https://stackoverflow.com/questions/58794639/how-to-make-follower-following-system-with-django-model
-    
