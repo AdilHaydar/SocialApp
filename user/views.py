@@ -1,13 +1,16 @@
 from django.shortcuts import render,redirect,get_object_or_404,HttpResponse, Http404, HttpResponseRedirect, reverse
 from .forms import RegisterForm, LoginForm, UserUpdateForm
-from .models import User, UserFollowing
+from .models import User
 from django.contrib.auth import login, get_user_model, authenticate, logout
-from django.views.generic import CreateView, FormView
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.db import IntegrityError
 from django.http import JsonResponse
+from django.contrib.auth.models import Group, Permission
+from urllib.parse import urlencode
+from django.conf import settings
+from .decorators import allowed_perms
 # Create your views here.
 
 User = get_user_model()
@@ -16,23 +19,31 @@ def register(request):
     context = {
             "form" : form
         }
+
     if form.is_valid():
         username = form.cleaned_data.get("username")
         password = form.cleaned_data.get("password")
         email = form.cleaned_data.get("email")
-        birthday = form.cleaned_data.get("birthday")
-        avatar = form.cleaned_data.get("avatar")
-        info = form.cleaned_data.get('info')
-        web_page = form.cleaned_data.get('web_page')
+        name = form.cleaned_data.get("name")
+        surname = form.cleaned_data.get("surname")
+        phone = form.cleaned_data.get("phone")
+        picture = form.cleaned_data.get("picture")
+        gender = form.cleaned_data.get('gender')
 
-        registeredUser = User(username = username,birthday=birthday,avatar=avatar,info=info,web_page=web_page, email = email)
+        group = Group.objects.get(name=settings.DEFAULT_GROUP)
+
+        registeredUser = User(username = username,name = name, gender=gender,picture=picture ,surname = surname, phone = phone , email = email)
         registeredUser.set_password(password)
+        registeredUser.group = group
         registeredUser.save()
         login(request, registeredUser)
-                
-        messages.success(request,"Başarılı Bir Şekilde Kayıt Oldunuz.")
-        return redirect("index")
-    return render(request,"register.html",context)
+
+        messages.success(request,'Registered successfully')
+        return redirect(reverse('user-view', kwargs={'username':request.user.username}))
+    if form.errors:
+        messages.warning(request,form.errors,'danger')
+    print(form.errors)
+    return render(request,"back_end/user/register_sablon2.html",context)
         
 def loginUser(request):
     form = LoginForm(request.POST or None)
@@ -43,26 +54,27 @@ def loginUser(request):
         user = User.objects.filter(username = username)
         if len(user) != 1:
             messages.info(request,"User does not exist.")
-            return redirect("index")
+            return render(request,'back_end/user/login_sablon.html',{'form':form})
         else:
             user = authenticate(username=username, password=password)
             if user is None:
                 messages.info(request,"Password doesn't match.")
-                return redirect("index")
+                return render(request,'back_end/user/login_sablon.html',{'form':form})
         messages.success(request,"Giriş Başarılı")
         login(request,user)
-        return redirect("index")
+        return redirect('eytpanelv1')
+        #return redirect(reverse('view', kwargs={'username':request.user.username}))
     
-    return render(request,'login.html',{'form':form})
+    return render(request,'back_end/user/login_sablon.html',{'form':form})
 
 def logoutUser(request):
     logout(request)
     messages.success(request,"You are logout succesfully")
-    return redirect("index")
+    return redirect('login')
 
 
 @login_required(login_url = "index")
-def userPanel(request,username):
+def change_user(request,username):
     if (not request.user.is_authenticated) and (not request.user.username == username):
         raise Http404
 
@@ -72,95 +84,183 @@ def userPanel(request,username):
     if form.is_valid():
         updatedUser = form.save(commit=False)
         for data in form.changed_data:
-            if data == 'password' and data == 'confirm':
-                continue
             updatedUser.data = form.cleaned_data.get(data)
+        
         updatedUser.set_password(form.cleaned_data.get('password'))
         updatedUser.save()
         login(request, updatedUser)
         
-        return HttpResponseRedirect(reverse('view_profile', kwargs={'username':username}))
-    return render(request, 'edit_profile.html',{'form':form})
+        return redirect(reverse('user-view', kwargs={'username':request.user.username}))
+    return render(request, 'back_end/user/edit.html',{'form':form})
 
-    """user = get_object_or_404(User, username=username)
-    if request.user.is_authenticated and not (request.user.username == username):
-        raise Http404
-    if request.method == "POST":
+@login_required(login_url = "user:login")
+def view_user(request,username):
+    if request.user.is_authenticated:
+        if request.user.username == username:
 
-        if request.FILES.get('avatar'):
-            user.avatar.delete()
-            user.avatar = request.FILES.get('avatar')
+            return render(request,'back_end/user/view.html')
+        
+    return HttpResponse('<b>Sayfayı Görüntülemek İçin Yetkiniz Yok</b>')
 
-        if request.POST.get('avatar-clear'):
-            user.avatar.delete()
+@allowed_perms('view_permission')
+def view_permission(request):
+    permissions = Permission.objects.all()
+    groups = Group.objects.all()
 
-        user.birthday = request.POST.get('birthday')
-        user.email = request.POST.get('email')
-
-        if request.POST.get('password') and request.POST.get('confirm'):
-            if request.POST.get('password') == request.POST.get('confirm'):
-                user.set_password(request.POST.get('password'))
-            else:
-                messages.warning(request,'Password do not match!', 'danger')
-                return render(request,'userPanel.html')
-        user.save()
-        messages.success(request,'Your profile successfully updated!')
-        return redirect('index')"""
-    return render(request, 'userPanel.html',{'username':username})
-
-def view_replies(request,username):
+    context = {
+        'perms' : permissions,
+        'groups' : groups,
+        'apps' : settings.APPS,
+    }
+    if request.GET.get('groups'):
+        context['selected_group'] = Group.objects.get(id=request.GET.get('groups'))
     
-    user = User.objects.prefetch_related('comment').get(username=username)
-    comments = user.comment.union()
+    
+    return render(request,'back_end/permission/perms.html',context)
 
-    page = request.GET.get('page',1)
-    paginator = Paginator(comments,10)
-    try:
-        comments = paginator.page(page)
-    except PageNotAnInteger:
-        comments = paginator.page(1)
-    except EmptyPage:
-        comments = paginator.page(paginator.num_pages)
+@allowed_perms('change_permission')
+def change_permission(request,pk):
+    if request.POST.get('perms'):
+        perms = request.POST.getlist('perms')
+        perms = list(map(int, perms))
 
-    return render(request,'user_profile_replies.html',{'user':user,'comments':comments})
+        group = Group.objects.get(id=pk)
+        group_perms = group.permissions.values_list('id', flat=True)
+
+        for perm in perms:
+            if perm in group_perms:
+                continue
+            else:
+                group.permissions.add(perm)
+
+        removed_perms = set(group_perms).difference(set(perms))
         
-def view_likes(request,username):
+        for perm in removed_perms:
+            group.permissions.remove(perm)
 
-    user = User.objects.prefetch_related('likes').get(username=username)
-    likes = user.likes.union()
+        base_url = reverse('set-perm')
+        query_string = urlencode({'groups':group.id})
+        url = f"{base_url}?{query_string}"
 
-    page = request.GET.get('page',1)
-    paginator = Paginator(likes,10)
-    try:
-        likes = paginator.page(page)
-    except PageNotAnInteger:
-        likes = paginator.page(1)
-    except EmptyPage:
-        likes = paginator.page(paginator.num_pages)
+    return redirect(url)
 
-    return render(request,'user_profile_likes.html',{'user':user,'likes':likes})
+@allowed_perms('add_group')
+def add_group(request):
+    groups = Group.objects.all()
 
+    context = {'groups':groups,'default_group':settings.DEFAULT_GROUP}
 
-def follow(request):
-    if request.is_ajax():
-        target_user_id = request.GET.get('follow')
-        target_user_id = int(target_user_id)
-        target_user = User.objects.get(id = target_user_id)
-        try:
-            UserFollowing.objects.create(user_id = request.user, following_user_id = target_user)
-        except IntegrityError:
-            return JsonResponse({"success":False}, status=406)
-        return JsonResponse({"succes":True}, status=200)
-    else:
-        return JsonResponse({"success":False}, status=400)
+    if request.method == "POST":
+        if request.POST.get('group'):
+            name = request.POST.get('group')
+            if name == settings.DEFAULT_GROUP:
+                raise Exception(f'The group name is assigned by default and cannot be given to another group (Incorrect name is {settings.DEFAULT_GROUP})')
+            Group.objects.create(name=name)
 
-def unfollow(request):
-    if request.is_ajax():
-        target_user_id = request.GET.get('unfollow')
-        target_user_id = int(target_user_id)
-        target_user = User.objects.get(id=target_user_id)
-        
-        unf = UserFollowing.objects.get(user_id = request.user, following_user_id = target_user)
-        unf.delete()
-        return JsonResponse({"success":True}, status=200)
-    return JsonResponse({"success":False}, status=400)
+        if request.POST.getlist('delete'):
+            group_ids = request.POST.getlist('delete')
+
+            for id in group_ids:
+                delete_group = Group.objects.get(id=id)
+
+                if delete_group.user.count() != 0:
+                    default_group = Group.objects.get(name=settings.DEFAULT_GROUP)
+
+                    for user in delete_group.user.all():
+                        user.group = default_group
+                        user.save()
+
+                if delete_group.name == 'Default':
+                    continue
+                #TODO
+                #Yeni group eklediğinde bu gruba default adı verilmesin.
+                delete_group.delete()
+
+        return redirect('add-group')
+    return render(request,'back_end/group/add.html',context)
+
+@allowed_perms('delete_group')
+def remove_group(request):
+    if request.POST.getlist('delete'):
+        group_ids = request.POST.getlist('delete')
+        for id in group_ids:
+            Group.objects.get(id=id).delete()
+
+    return redirect('add-group')
+
+@allowed_perms('change_group')
+def change_group(request):
+    groups = Group.objects.all()
+
+    context = {
+        'groups':groups,
+    }
+
+    if request.GET.get('username'):
+        username = request.GET.get('username')
+        users = User.objects.filter(username__icontains = username)
+        context['users'] = users
+    
+    username = request.GET.get('username')
+    if request.method == 'POST':
+        user_id = request.POST.get('user_id')
+        group_name = request.POST.get('groups')
+
+        base_url = reverse('change-group')
+        query_string = urlencode({'username':username})
+        url = f"{base_url}?{query_string}"
+
+        user = User.objects.get(id=user_id)
+        group = Group.objects.get(name=group_name)
+
+        user.group = group
+        user.save()
+
+        return redirect(url)
+
+    return render(request,'back_end/group/change.html',context)
+
+@allowed_perms('view_group')
+def show_group_members(request, name):
+    group_members = Group.objects.prefetch_related('user').get(name=name).user.all()
+
+    return render(request,'back_end/group/show_group_members.html',{'group_members':group_members})
+
+@allowed_perms('change_user')
+def edit_user(request, username):
+    user = get_object_or_404(User, username=username)
+    if user.is_superuser:
+        if not request.user.is_superuser:
+            messages.warning(request,'You cant edit SUPERUSER','danger')
+            return redirect(reverse('user-view', kwargs={'username':request.user.username}))
+    form = UserUpdateForm(data=request.POST or None, files = request.FILES or None, instance=user)
+
+    if form.is_valid():
+
+        updatedUser = form.save(commit=False)
+
+        for data in form.changed_data:
+            updatedUser.data = form.cleaned_data.get(data)
+
+        updatedUser.set_password(form.cleaned_data.get('password'))
+        updatedUser.admin = form.cleaned_data.get('admin')
+
+        updatedUser.save()
+        messages.success(request,'Process Successfully Completed')
+
+        return redirect(reverse('view-other-user', kwargs={'username':username}))
+
+    if form.errors:
+        messages.warning(request,form.errors,"danger")
+
+    return render(request, 'back_end/user/edit.html',{'form':form})
+    
+
+@allowed_perms('view_user')
+def view_other_user(request, username):
+
+    user = User.objects.get(username=username)
+
+    return render(request,'back_end/user/view_other_user.html',{'user':user})
+
+    
